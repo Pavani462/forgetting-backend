@@ -1,47 +1,39 @@
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 import joblib
 import pandas as pd
 import os
 
 app = FastAPI()
 
-# =========================
-# Enable CORS
-# =========================
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],   # allow frontend (for development)
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# =========================
-# Load Model
-# =========================
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-model_path = os.path.join(BASE_DIR, "model.pkl")
-scaler_path = os.path.join(BASE_DIR, "scaler.pkl")
-
-model = joblib.load(model_path)
-scaler = joblib.load(scaler_path)
+model = joblib.load(os.path.join(BASE_DIR, "model.pkl"))
+scaler = joblib.load(os.path.join(BASE_DIR, "scaler.pkl"))
 
 features = ["time_gap", "difficulty", "retention"]
 
-# =========================
-# Routes
-# =========================
 @app.get("/")
 def home():
     return {"message": "Forgetting Prediction API Running"}
 
 @app.post("/predict")
-def predict(time_gap: float, difficulty: float, retention: float):
+def predict(concept: str, difficulty: str):
+    
+    # 🔥 Convert difficulty
+    difficulty_map = {
+        "Easy": 0.3,
+        "Medium": 0.6,
+        "Hard": 0.9
+    }
+
+    difficulty_value = difficulty_map.get(difficulty, 0.6)
+
+    # 🔥 Simulated values (for now)
+    time_gap = 5   # assume 5 days since last study
+    retention = 0.7  # assume some retention
 
     input_df = pd.DataFrame(
-        [[time_gap, difficulty, retention]],
+        [[time_gap, difficulty_value, retention]],
         columns=features
     )
 
@@ -56,6 +48,8 @@ def predict(time_gap: float, difficulty: float, retention: float):
         recommendation = "No immediate revision needed"
 
     return {
+        "concept": concept,
         "forgetting_probability": round(float(prob), 3),
-        "recommendation": recommendation
+        "recommendation": recommendation,
+        "retention": round(1 - prob, 3)
     }
