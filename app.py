@@ -17,23 +17,13 @@ def home():
     return {"message": "Forgetting Prediction API Running"}
 
 @app.post("/predict")
-def predict(concept: str, difficulty: str):
-    
-    # 🔥 Convert difficulty
-    difficulty_map = {
-        "Easy": 0.3,
-        "Medium": 0.6,
-        "Hard": 0.9
-    }
+def predict(time_gap: float, difficulty: float):
 
-    difficulty_value = difficulty_map.get(difficulty, 0.6)
-
-    # 🔥 Simulated values (for now)
-    time_gap = 5   # assume 5 days since last study
-    retention = 0.7  # assume some retention
+    # simulate retention decay (REALISTIC)
+    retention = max(0.1, 1 - (time_gap * difficulty * 0.1))
 
     input_df = pd.DataFrame(
-        [[time_gap, difficulty_value, retention]],
+        [[time_gap, difficulty, retention]],
         columns=features
     )
 
@@ -48,8 +38,7 @@ def predict(concept: str, difficulty: str):
         recommendation = "No immediate revision needed"
 
     return {
-        "concept": concept,
         "forgetting_probability": round(float(prob), 3),
-        "recommendation": recommendation,
-        "retention": round(1 - prob, 3)
+        "retention": round(1 - prob, 3),
+        "recommendation": recommendation
     }
