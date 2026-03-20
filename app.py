@@ -19,7 +19,15 @@ def home():
 @app.post("/predict")
 def predict(time_gap: float, difficulty: float):
 
-    # simulate retention decay (REALISTIC)
+    # 🔥 HANDLE NEW CONCEPT (VERY IMPORTANT)
+    if time_gap == 0:
+        return {
+            "forgetting_probability": 0.2,
+            "retention": 0.8,
+            "recommendation": "Just learned"
+        }
+
+    # simulate retention decay
     retention = max(0.1, 1 - (time_gap * difficulty * 0.1))
 
     input_df = pd.DataFrame(
